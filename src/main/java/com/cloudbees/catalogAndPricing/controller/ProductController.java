@@ -2,6 +2,7 @@ package com.cloudbees.catalogAndPricing.controller;
 
 import com.cloudbees.catalogAndPricing.dao.PriceAdjustmentType;
 import com.cloudbees.catalogAndPricing.dao.Product;
+import com.cloudbees.catalogAndPricing.dto.ProductDto;
 import com.cloudbees.catalogAndPricing.services.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +20,14 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProducts() {
+    public List<ProductDto> getAllProducts() {
         return productService.getAllProducts();
     }
 
     @GetMapping("/{productId}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long productId) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable Long productId) {
         try {
-            Product product = productService.getProductById(productId);
+            ProductDto product = productService.getProductById(productId);
             return new ResponseEntity<>(product, HttpStatus.OK);
         } catch (RuntimeException e) {
             log.error("Error in getting the product with id : {}", productId);
@@ -35,22 +36,22 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        Product createdProduct = productService.createProduct(product);
+    public ResponseEntity<ProductDto> createProduct(@RequestBody ProductDto productCreateRequest) {
+        ProductDto createdProduct = productService.createProduct(productCreateRequest);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{productId}")
-    public ResponseEntity<String> updateProduct(@PathVariable Long productId, @RequestBody Product updatedProduct) {
+    @PutMapping()
+    public ResponseEntity<String> updateProduct( @RequestBody Product updatedProduct) {
         try {
-            boolean success = productService.updateProduct(productId, updatedProduct);
+            boolean success = productService.updateProduct(updatedProduct);
             if (success) {
                 return ResponseEntity.ok("Product updated successfully");
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found with id: " + productId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found with id: " + updatedProduct.getPid());
             }
         } catch (RuntimeException e) {
-            log.error("Error in updating the product with id: {} error: {}", productId, e.getStackTrace());
+            log.error("Error in updating the product with id: {} error: {}", updatedProduct.getPid(), e.getStackTrace());
             throw e;
         }
     }
@@ -71,8 +72,17 @@ public class ProductController {
     }
 
     @PostMapping("/{productId}/apply-tax")
-    public ResponseEntity<Product> applyTax(@PathVariable Long productId, @RequestParam double priceUpdateValue, @RequestParam PriceAdjustmentType priceUpdateType ) {
-        Product updatedProduct = productService.applyDiscountOrTax(productId, priceUpdateType, priceUpdateValue);
-        return ResponseEntity.ok(updatedProduct);
+    public ResponseEntity<String> applyTax(@PathVariable Long productId, @RequestParam double priceUpdateValue, @RequestParam PriceAdjustmentType priceUpdateType ) {
+        try {
+            boolean success = productService.applyDiscountOrTax(productId, priceUpdateType, priceUpdateValue);
+            if (success) {
+                return ResponseEntity.ok("Product applied with tax/ discounts successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found with id: " + productId);
+            }
+        } catch (RuntimeException e) {
+            log.error("Error in applying tax or discount for the product with id : {}  error : {}", productId, e.getStackTrace());
+            throw e;
+        }
     }
 }

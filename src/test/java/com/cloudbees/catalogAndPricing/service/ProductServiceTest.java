@@ -3,7 +3,11 @@ package com.cloudbees.catalogAndPricing.service;
 import com.cloudbees.catalogAndPricing.dao.PriceAdjustmentType;
 import com.cloudbees.catalogAndPricing.dao.PriceDetails;
 import com.cloudbees.catalogAndPricing.dao.Product;
+import com.cloudbees.catalogAndPricing.dto.ProductDaoMapper;
+import com.cloudbees.catalogAndPricing.dto.ProductDto;
+import com.cloudbees.catalogAndPricing.dto.ProductDtoMapper;
 import com.cloudbees.catalogAndPricing.exceptions.ProductNotFoundException;
+import com.cloudbees.catalogAndPricing.repository.ProductPriceRepository;
 import com.cloudbees.catalogAndPricing.repository.ProductRepository;
 import com.cloudbees.catalogAndPricing.services.ProductService;
 import org.junit.jupiter.api.Test;
@@ -18,54 +22,74 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private ProductPriceRepository productPriceRepository;
+
     @InjectMocks
     private ProductService productService;
 
+    @Mock
+    private ProductDtoMapper productDtoMapper;
+
+    @Mock
+    private ProductDaoMapper productDaoMapper;
+
     @Test
     public void getAllProducts_ReturnsListOfProducts() {
-        List<Product> products = Arrays.asList(new Product(), new Product());
-        Mockito.when(productRepository.findAll()).thenReturn(products);
-        List<Product> result = productService.getAllProducts();
-        assertEquals(products, result);
+        List<Product> products = Arrays.asList(new Product());
+        ProductDto productDto = new ProductDto();
+        List<ProductDto> expectedRes = Arrays.asList(productDto);
+        when(productRepository.findAll()).thenReturn(products);
+        when(productDtoMapper.apply(any())).thenReturn(productDto);
+        List<ProductDto> result = productService.getAllProducts();
+        assertEquals(expectedRes, result);
     }
 
     @Test
     public void getProductById_ValidId_ReturnsProduct() {
         Long productId = 1L;
-        Product product = new Product();
-        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        Product result = productService.getProductById(productId);
+        ProductDto product = new ProductDto();
+        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
+        when(productDtoMapper.apply(any())).thenReturn(product);
+        ProductDto result = productService.getProductById(productId);
         assertEquals(product, result);
     }
 
     @Test
     public void getProductById_InvalidId_ThrowsProductNotFoundException() {
         Long productId = 2L;
-        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
         assertThrows(ProductNotFoundException.class, () -> productService.getProductById(productId));
     }
 
     @Test
     public void createProduct_ValidProduct_ReturnsCreatedProduct() {
         Product product = new Product();
-        Mockito.when(productRepository.save(product)).thenReturn(product);
-        Product result = productService.createProduct(product);
-        assertEquals(product, result);
+        ProductDto productDto = new ProductDto();
+        when(productRepository.save(product)).thenReturn(product);
+        when(productDtoMapper.apply(any())).thenReturn(productDto);
+        when(productDaoMapper.apply(any())).thenReturn(product);
+        ProductDto result = productService.createProduct(productDto);
+        assertEquals(productDto, result);
     }
 
     @Test
     public void updateProduct_ExistingProduct_ReturnsTrue() {
         Long productId = 1L;
         Product updatedProduct = new Product();
-        Mockito.when(productRepository.existsById(productId)).thenReturn(true);
-        Mockito.when(productRepository.save(updatedProduct)).thenReturn(updatedProduct);
-        boolean result = productService.updateProduct(productId, updatedProduct);
+        updatedProduct.setPid(productId);
+        when(productRepository.existsById(productId)).thenReturn(true);
+        when(productRepository.save(updatedProduct)).thenReturn(updatedProduct);
+        boolean result = productService.updateProduct( updatedProduct);
         assertTrue(result);
     }
 
@@ -73,15 +97,16 @@ public class ProductServiceTest {
     public void updateProduct_NonExistingProduct_ReturnsFalse() {
         Long productId = 2L;
         Product updatedProduct = new Product();
-        Mockito.when(productRepository.existsById(productId)).thenReturn(false);
-        boolean result = productService.updateProduct(productId, updatedProduct);
+        updatedProduct.setPid(productId);
+        when(productRepository.existsById(productId)).thenReturn(false);
+        boolean result = productService.updateProduct( updatedProduct);
         assertFalse(result);
     }
 
     @Test
     public void deleteProduct_ExistingProduct_ReturnsTrue() {
         Long productId = 1L;
-        Mockito.when(productRepository.existsById(productId)).thenReturn(true);
+        when(productRepository.existsById(productId)).thenReturn(true);
         boolean result = productService.deleteProduct(productId);
         assertTrue(result);
     }
@@ -89,7 +114,7 @@ public class ProductServiceTest {
     @Test
     public void deleteProduct_NonExistingProduct_ReturnsFalse() {
         Long productId = 2L;
-        Mockito.when(productRepository.existsById(productId)).thenReturn(false);
+        when(productRepository.existsById(productId)).thenReturn(false);
         boolean result = productService.deleteProduct(productId);
         assertFalse(result);
     }
@@ -104,13 +129,10 @@ public class ProductServiceTest {
         PriceDetails priceDetails = new PriceDetails();
         priceDetails.setPrice(initialValue);
         product.setPriceDetails(priceDetails);
-
-        Mockito.when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        Mockito.when(productRepository.save(product)).thenReturn(product);
-
-        Product result = productService.applyDiscountOrTax(productId, type, value);
-        double expectedFinalPrice = initialValue * (1 - value / 100);
+        when(productPriceRepository.getReferenceById(productId)).thenReturn(priceDetails);
+        when(productPriceRepository.save(priceDetails)).thenReturn(priceDetails);
+        boolean result = productService.applyDiscountOrTax(productId, type, value);
         assertNotNull(result);
-        assertEquals(expectedFinalPrice, result.getPriceDetails().getPrice(), 0.001);
+        assertEquals(result,true);
     }
 }

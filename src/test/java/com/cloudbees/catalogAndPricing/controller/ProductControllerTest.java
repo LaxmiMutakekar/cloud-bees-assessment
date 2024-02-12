@@ -3,6 +3,8 @@ package com.cloudbees.catalogAndPricing.controller;
 import com.cloudbees.catalogAndPricing.controller.ProductController;
 import com.cloudbees.catalogAndPricing.dao.PriceAdjustmentType;
 import com.cloudbees.catalogAndPricing.dao.Product;
+import com.cloudbees.catalogAndPricing.dto.ProductDto;
+import com.cloudbees.catalogAndPricing.dto.ProductDtoMapper;
 import com.cloudbees.catalogAndPricing.exceptions.ProductNotFoundException;
 import com.cloudbees.catalogAndPricing.services.ProductService;
 import org.junit.jupiter.api.Test;
@@ -32,18 +34,18 @@ public class ProductControllerTest {
 
     @Test
     public void getAllProducts_ReturnsListOfProducts() {
-        List<Product> products = Arrays.asList(new Product(), new Product());
+        List<ProductDto> products = Arrays.asList(new ProductDto(), new ProductDto());
         Mockito.when(productService.getAllProducts()).thenReturn(products);
-        List<Product> result = productController.getAllProducts();
+        List<ProductDto> result = productController.getAllProducts();
         assertEquals(products, result);
     }
 
     @Test
     public void getProductById_ValidId_ReturnsProduct() {
         Long productId = 1L;
-        Product product = new Product();
+        ProductDto product = new ProductDto();
         Mockito.when(productService.getProductById(productId)).thenReturn(product);
-        ResponseEntity<Product> response = productController.getProductById(productId);
+        ResponseEntity<ProductDto> response = productController.getProductById(productId);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(product, response.getBody());
     }
@@ -58,19 +60,20 @@ public class ProductControllerTest {
 
     @Test
     public void createProduct_ValidProduct_ReturnsCreated() {
-        Product product = new Product();
-        Mockito.when(productService.createProduct(product)).thenReturn(product);
-        ResponseEntity<Product> response = productController.createProduct(product);
+        ProductDto productDto = new ProductDto();
+        Mockito.when(productService.createProduct(productDto)).thenReturn(productDto);
+        ResponseEntity<ProductDto> response = productController.createProduct(productDto);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(product, response.getBody());
+        assertEquals(productDto, response.getBody());
     }
 
     @Test
     public void updateProduct_ValidIdAndProduct_ReturnsOk() {
         Long productId = 1L;
         Product updatedProduct = new Product();
-        Mockito.when(productService.updateProduct(productId, updatedProduct)).thenReturn(true);
-        ResponseEntity<String> response = productController.updateProduct(productId, updatedProduct);
+        updatedProduct.setPid(productId);
+        Mockito.when(productService.updateProduct( updatedProduct)).thenReturn(true);
+        ResponseEntity<String> response = productController.updateProduct( updatedProduct);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product updated successfully", response.getBody());
     }
@@ -79,8 +82,9 @@ public class ProductControllerTest {
     public void updateProduct_InvalidId_ReturnsNotFound() {
         Long productId = 2L;
         Product updatedProduct = new Product();
-        Mockito.when(productService.updateProduct(productId, updatedProduct)).thenReturn(false);
-        ResponseEntity<String> response = productController.updateProduct(productId, updatedProduct);
+        updatedProduct.setPid(productId);
+        Mockito.when(productService.updateProduct( updatedProduct)).thenReturn(false);
+        ResponseEntity<String> response = productController.updateProduct( updatedProduct);
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertEquals("Product not found with id: " + productId, response.getBody());
     }
@@ -108,8 +112,7 @@ public class ProductControllerTest {
         Long productId = 1L;
         double priceUpdateValue = 5.0;
         PriceAdjustmentType priceUpdateType = PriceAdjustmentType.TAX_VALUE;
-        Product updatedProduct = new Product();
-        Mockito.when(productService.applyDiscountOrTax(productId, priceUpdateType, priceUpdateValue)).thenReturn(updatedProduct);
-        ResponseEntity<Product> response=productController.applyTax(productId,priceUpdateValue,priceUpdateType);
+        Mockito.when(productService.applyDiscountOrTax(productId, priceUpdateType, priceUpdateValue)).thenReturn(true);
+        ResponseEntity<String> response=productController.applyTax(productId,priceUpdateValue,priceUpdateType);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }}

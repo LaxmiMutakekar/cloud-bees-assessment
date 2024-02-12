@@ -1,6 +1,7 @@
 package com.cloudbees.catalogAndPricing.controller;
 
 import com.cloudbees.catalogAndPricing.exceptions.ProductNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,5 +26,12 @@ public class ProductControllerAdvice extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> HandleException(Exception ex, WebRequest request) {
         String errorMessage = "Internal Exception occurred ";
         return handleExceptionInternal(ex, errorMessage + ex.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    protected ResponseEntity<Object> HandleDataIntegrityViolationException(DataIntegrityViolationException ex, WebRequest request) {
+        String errorMessage = "Exception occurred due to conflict in entity creation as record already present with given attributes";
+        return handleExceptionInternal(ex, errorMessage , new HttpHeaders(), HttpStatus.CONFLICT, request);
     }
 }

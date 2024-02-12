@@ -7,10 +7,14 @@ import lombok.Data;
 @Data
 public class PriceDetails {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private Double price;
     private Double discountPercentage;
+
+    @OneToOne(mappedBy = "priceDetails", cascade = CascadeType.ALL)
+    private Product product;
     private Double taxRate;
 
 }
