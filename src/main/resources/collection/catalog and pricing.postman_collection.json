@@ -1,0 +1,132 @@
+{
+	"info": {
+		"_postman_id": "329220cc-ca3a-4eb6-9de3-0463debc6c80",
+		"name": "catalog and pricing",
+		"description": "CatalogAndPricing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15343909",
+		"_collection_link": "https://restless-meadow-304749.postman.co/workspace/WareHouseServices~8a69c624-c3e7-4df1-803c-4784bf2c31a7/collection/15343909-329220cc-ca3a-4eb6-9de3-0463debc6c80?action=share&source=collection_link&creator=15343909"
+	},
+	"item": [
+		{
+			"name": "create product",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pid\": 1,\n    \"name\": \"productNum1\",\n    \"description\": \"description\",\n    \"priceDetails\": {\n        \"id\": 1,\n        \"basePrice\": 19.4,\n        \"discountPercentage\": 10,\n        \"taxRate\": 2\n    },\n    \"quantityAvailable\": 4\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/products",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"products"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Product with id",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "update product",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pid\": 3,\n    \"name\": \"productNum1\",\n    \"description\": \"description\",\n        \"price\": 19.3,\n    \"quantityAvailable\": 6\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/products/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"products",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "apply tax",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/products/1/apply-tax?priceUpdateValue=10&priceUpdateType=DISCOUNT_VALUE",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"products",
+						"1",
+						"apply-tax"
+					],
+					"query": [
+						{
+							"key": "priceUpdateValue",
+							"value": "10"
+						},
+						{
+							"key": "priceUpdateType",
+							"value": "DISCOUNT_VALUE"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "delete product",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/products/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"products",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
